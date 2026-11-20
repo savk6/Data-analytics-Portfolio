@@ -9,12 +9,17 @@ Practice SQL subqueries through business scenarios
 involving product sales, revenue and data management.
 
 SKILLS:
-- Single-row and multiple-row subqueries
+- Single-row 
 - IN and NOT IN
-- EXISTS and NOT EXISTS 
+- EXISTS
 - ANY and ALL
 - Correlated subqueries
 - INSERT, UPDATE and DELETE using subqueries
+
+NOTE:
+Run the table creation and initial INSERT setup sections only once.
+Re-running the entire script may cause table-exists errors
+or duplicate records.
 
 --------------------------------------------------
 --------------------------------------------------
@@ -23,19 +28,36 @@ SKILLS:
 USE MyFirstDatabase;
 GO
 
+/*
+--------------------------------------------------
+DATA VALIDATION: PAYMENT METHODS
+PURPOSE:
+Verify available payment methods and check for NULL values.
+--------------------------------------------------
+*/
+SELECT 
+	PaymentMethod,
+	COUNT(*) AS NumberOfSales
+FROM dbo.DailySales
+GROUP BY PaymentMethod; 
+
+SELECT *
+FROM dbo.DailySales
+WHERE PaymentMethod IS NULL;
+
 /* 
 --------------------------------------------------
 PROJECT SETUP: PRODUCT CATALOGUE
 --------------------------------------------------
 */
---create product catalogue table
+-- Create product catalogue table
 CREATE TABLE dbo.ProductCatalogue
 (
 	ProductID INT IDENTITY (1,1) PRIMARY KEY,
 	ProductName VARCHAR(150) NOT NULL
 );
 
--- Insert Product Records
+-- Insert product records
 INSERT INTO dbo.ProductCatalogue (ProductName)
 VALUES
 	('Laptop'),
@@ -47,7 +69,7 @@ VALUES
 	('Printer'),
 	('Scanner');
 
---Verify the records
+-- Verify the records
 
 SELECT *
 FROM dbo.ProductCatalogue;
@@ -65,11 +87,12 @@ Which Products in our catalogue have never been sold?
 
 SELECT * 
 FROM dbo.ProductCatalogue
-WHERE ProductName NOT IN 
-	(
-	SELECT ProductName 
-	FROM dbo.DailySales
-	);
+	WHERE ProductName NOT IN
+(
+    SELECT ProductName
+    FROM dbo.DailySales
+    WHERE ProductName IS NOT NULL
+);
 /* 
 LEARNING:
 NOT IN excludes values that appear in the result returned 
@@ -97,8 +120,8 @@ FROM dbo.ProductCatalogue AS p
 WHERE EXISTS
 	(
 	SELECT 1
-	FROM dbo.DailySales AS D
-	Where D.ProductName= P.ProductName
+	FROM dbo.DailySales AS d
+	Where d.ProductName= p.ProductName
 		AND D.TotalRevenue> 500
 	);
 
@@ -108,10 +131,10 @@ WHERE EXISTS
 /* 
 ------------------------------------------------------
 ------------------------------------------------------
-EXERCISE 3A: PRODUCTS WITH HIGHER PRICES
+EXERCISE 3A: SALES RECORDS WITH HIGHER PRICES
 CONCEPT: Subquery using ANY
 BUSINESS QUESTION:
-Which products have a UnitPrice greater than at least
+Which sales record have a UnitPrice greater than at least
 one cash-sale UnitPrice?
 -------------------------------------------------------
 -------------------------------------------------------
@@ -125,16 +148,16 @@ WHERE UnitPrice > ANY
 	Where PaymentMethod = 'Cash' 
 	);
 
---ANY returns records where the comparison is true 
---for atleast one value returned by the subquery.
+-- ANY returns records where the comparison is true 
+-- for atleast one value returned by the subquery.
 
 /* 
 ------------------------------------------------------
 ------------------------------------------------------
-EXERCISE 3B: PRODUCTS WITH HIGHER PRICES
+EXERCISE 3B: SALES RECORDS WITH HIGHER PRICES
 CONCEPT: Subquery using ALL
 BUSINESS QUESTION:
-Which products have a UnitPrice greater than All
+Which sales record have a UnitPrice greater than all
 cash-sale UnitPrice?
 -------------------------------------------------------
 -------------------------------------------------------
@@ -147,7 +170,7 @@ WHERE UnitPrice > ALL
 	FROM dbo.DailySales
 	Where PaymentMethod = 'Cash' 
 	);
---All requires UnitPrice to be greater than 
+-- All requires UnitPrice to be greater than 
 -- every value returned by the inner query.
 
 /*
@@ -200,8 +223,9 @@ SELECT SalesID,ProductName, TotalRevenue
 FROM dbo.DailySales
 WHERE TotalRevenue > 500;
 
-Select*                               --->{VERIFICATION
-from dbo.HighRevenueSales  
+-- VERIFICATION
+SELECt*                               
+FROM dbo.HighRevenueSales;  
 
 -- INSERT ...SELECT copies selected records into
 -- another table without deleting the original records.
@@ -213,7 +237,7 @@ CONCEPT: Subqueries with UPDATE and DELETE
 -------------------------------------------------------
 */
 
---6 A Create a product review test table
+-- 6A Create a product review test table
 
 CREATE TABLE dbo.ProductReviewTest
 	(
@@ -235,7 +259,7 @@ VALUES
 ('Scanner', 'Standard'),
 ('Tablet', 'Standard');
 
---Identify which are the high priority products
+--Identify high-revenue Products
 SELECT *
 FROM dbo.ProductReviewTest
 WHERE ProductName IN 
@@ -244,7 +268,7 @@ SELECT ProductName
 FROM dbo.DailySales
 WHERE TotalRevenue> 500
 );
---UPDATE
+-- Update Product review status
 UPDATE dbo.ProductReviewTest
 SET ReviewStatus = 'High Priority'
 WHERE ProductName IN 
@@ -253,15 +277,18 @@ FROM dbo.DailySales
 WHERE TotalRevenue> 500
 );
 
-select *                                --->{VERIFICATION
-from dbo.ProductReviewTest;
+-- Verify updated records
+
+SELECt *                                
+FROM dbo.ProductReviewTest;
 
 -- UPDATE with a subquery modifies records matching
 -- the values returned by the inner query.
 
 
 -- 6B DELETE using a Subquery
---IDENTIFY first
+
+-- IDENTIFY records to be deleted
 
 SELECT *
 FROM dbo.ProductReviewTest
@@ -271,7 +298,7 @@ WHERE ProductName NOT IN
  FROM dbo.ProductCatalogue
  );
  
- -- DELETE 
+ -- DELETE records not in ProductCatalogue
  DELETE
  FROM dbo.ProductReviewTest
  WHERE ProductName NOT IN 
