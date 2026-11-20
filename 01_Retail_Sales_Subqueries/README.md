@@ -42,6 +42,8 @@ Database: `MyFirstDatabase`
 
 ## Project Exercises
 
+## Project Exercises
+
 | Exercise | Business Question | SQL Concepts |
 |---|---|---|
 | 1. Products Never Sold | Which catalogue products have never been sold? | `NOT IN` |
@@ -57,7 +59,7 @@ Database: `MyFirstDatabase`
 
 - Identified products in the catalogue with no matching sales records.
 - Identified Laptop as the product with qualifying high-revenue transactions.
-- Compared `ANY` and `ALL` to understand the difference between matching at least one value and matching every value.
+- Compared ANY and ALL to understand how SQL evaluates a value against at least one value versus every value in a subquery result.
 - Calculated transaction counts for each catalogue product, including products with zero sales.
 - Created a separate table for high-revenue sales records.
 - Practised updating and deleting records using subqueries.
